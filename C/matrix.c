@@ -50,13 +50,11 @@ void mul(double m1[], double m2[], size_t r1, size_t c1, size_t c2, double r[])
 	size_t j = 0;
 	while (j < c2)
 	{
-	    //printf("\n--------------\n");
 	    size_t z = 0;
 	    double acc = 0;
 	    while (z < c1)
 	    {
 		acc += m1[i*c1+z]*m2[z*c2+j];		
-		//printf("%f * %f\n", m1[i*c1+z], m2[z*c2+j]);
 		++z;
 	    }
 	    r[i*c2+j] = acc;
