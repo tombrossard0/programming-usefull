@@ -12,8 +12,8 @@ void print_matrix(char s[], double m[], size_t rows, size_t cols)
 			printf("%4g", m[i*cols+j]);
 			++j;
 		}
-	printf("\n");
-	++i;
+		printf("\n");
+		++i;
 	}
 }
 
