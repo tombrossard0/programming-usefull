@@ -17,6 +17,13 @@ void print_matrix(char s[], double m[], size_t rows, size_t cols)
 	}
 }
 
+double get_matrix(double m[], size_t rows, size_t cols, size_t row, size_t col)
+{
+	if (row < rows && col < cols)
+		return r[row*rows+col];
+	return 0;
+}
+
 void transpose(double m[], size_t rows, size_t cols, double r[])
 {
 	size_t i = 0;
