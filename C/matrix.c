@@ -27,7 +27,7 @@ void New_Matrix(int rows, int cols, double * res)
     int size = rows*cols;
 
     for (int i = 0; i < size; i++)
-        res[i] = ((double)rand() / (double) RAND_MAX)*2-1;
+        res[i] = random_value()*2-1;
 }
 
 void Reset_Matrix(int rows, int cols, double * res)
@@ -90,4 +90,16 @@ void Mult_Matrix(double m1[], double m2[], size_t r1, size_t c1, size_t c2, doub
 		}
 		++i;
 	}
+}
+
+void Matrix_Sigmoid(double m[], int rows, int cols)
+{
+    int size = rows*cols;
+
+    int i = 0;
+    while (i < size)
+    {
+        m[i] = Sigmoid(m[i]);
+        i++;
+    }
 }
