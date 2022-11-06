@@ -1,4 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "functions.h"
+
 
 void Print_Matrix(char s[], double m[], size_t rows, size_t cols)
 {
@@ -22,7 +27,7 @@ void New_Matrix(int rows, int cols, double * res)
     int size = rows*cols;
 
     for (int i = 0; i < size; i++)
-        res[i] = random_value()*2-1;
+        res[i] = ((double)rand() / (double) RAND_MAX)*2-1;
 }
 
 void Reset_Matrix(int rows, int cols, double * res)
@@ -36,7 +41,7 @@ void Reset_Matrix(int rows, int cols, double * res)
 double Get_Matrix(double m[], size_t rows, size_t cols, size_t row, size_t col)
 {
 	if (row < rows && col < cols)
-		return r[row*rows+col];
+		return m[row*rows+col];
 	return 0;
 }
 
@@ -85,16 +90,4 @@ void Mult_Matrix(double m1[], double m2[], size_t r1, size_t c1, size_t c2, doub
 		}
 		++i;
 	}
-}
-
-void Matrix_Sigmoid(double m[], int rows, int cols)
-{
-    int size = rows*cols;
-
-    int i = 0;
-    while (i < size)
-    {
-        m[i] = Sigmoid(m[i]);
-        i++;
-    }
 }
