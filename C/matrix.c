@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-void print_matrix(char s[], double m[], size_t rows, size_t cols)
+void Print_Matrix(char s[], double m[], size_t rows, size_t cols)
 {
 	printf("%s = \n", s);
 	size_t i = 0;
@@ -17,14 +17,30 @@ void print_matrix(char s[], double m[], size_t rows, size_t cols)
 	}
 }
 
-double get_matrix(double m[], size_t rows, size_t cols, size_t row, size_t col)
+void New_Matrix(int rows, int cols, double * res)
+{
+    int size = rows*cols;
+
+    for (int i = 0; i < size; i++)
+        res[i] = random_value()*2-1;
+}
+
+void Reset_Matrix(int rows, int cols, double * res)
+{
+    int size = rows*cols;
+
+    for (int i = 0; i < size; i++)
+        res[i] = 0;
+}
+
+double Get_Matrix(double m[], size_t rows, size_t cols, size_t row, size_t col)
 {
 	if (row < rows && col < cols)
 		return r[row*rows+col];
 	return 0;
 }
 
-void transpose(double m[], size_t rows, size_t cols, double r[])
+void Matrix_T(double m[], size_t rows, size_t cols, double r[])
 {
 	size_t i = 0;
 	while (i < rows)
@@ -39,7 +55,7 @@ void transpose(double m[], size_t rows, size_t cols, double r[])
 	}
 }
 
-void add(double m1[], double m2[], size_t rows, size_t cols, double r[])
+void Add_Matrix(double m1[], double m2[], size_t rows, size_t cols, double r[])
 {
 	size_t i = 0;
 	while (i < rows*cols)
@@ -49,7 +65,7 @@ void add(double m1[], double m2[], size_t rows, size_t cols, double r[])
 	}
 }
 
-void mul(double m1[], double m2[], size_t r1, size_t c1, size_t c2, double r[])
+void Mult_Matrix(double m1[], double m2[], size_t r1, size_t c1, size_t c2, double r[])
 {
 	size_t i = 0;
 	while (i < r1)
@@ -69,4 +85,16 @@ void mul(double m1[], double m2[], size_t r1, size_t c1, size_t c2, double r[])
 		}
 		++i;
 	}
+}
+
+void Matrix_Sigmoid(double m[], int rows, int cols)
+{
+    int size = rows*cols;
+
+    int i = 0;
+    while (i < size)
+    {
+        m[i] = Sigmoid(m[i]);
+        i++;
+    }
 }
