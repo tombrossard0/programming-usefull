@@ -1,0 +1,59 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "data.h"
+
+
+/* Constants */
+#define WINDOW_WIDTH 28
+#define MAXCHAR 4096
+/* --------- */
+
+
+void Get_CSV_Data_Image(char *file_name, struct DataSet * data_set)
+{
+    FILE *fp;
+    char row[MAXCHAR];
+    char *token;
+
+    fp = fopen(file_name,"r");
+
+    int r = 0;
+    while (feof(fp) != true && r <= data_set->length)
+    {
+        char label[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        char * fgets_return = fgets(row, MAXCHAR, fp);
+        if (fgets_return[0] == 0)
+            printf("BUG\n");
+
+        token = strtok(row, ",");
+
+        int i = 0;
+        int img_pixel_index = 0;
+
+        while(token != NULL)
+        {
+            if (r >= 1 && i == 1)
+            {
+                label[0] = token[0];
+                data_set->data_set[r-1].label[0] = token[0];
+            }
+
+            if (r >= 1 && i >= 2)
+            {
+                if (((float)strtol(token, (char **)NULL, 10) / 255) >= 0.25)
+                {
+                    data_set->data_set[r-1].input[img_pixel_index] = 1;
+                }
+                img_pixel_index++;
+            }
+            token = strtok(NULL, ",");
+            i++;
+        }
+        if (r >= 1)
+            data_set->data_set[r-1].expected_output[label[0]-'0'] = 1;
+
+        r++;
+    }
+}

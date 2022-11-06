@@ -1,14 +1,17 @@
 #include <stdio.h>
 #include "matrix.h"
+#include "data.h"
+#include "user_inputs_functions.h"
+
 
 /* Constants */
-#define INPUTS_R 2 // 784
+#define INPUTS_R 784 // 784
 #define INPUTS_C 1
 
-#define HIDDENS_R 4 // 12
+#define HIDDENS_R 12 // 12
 #define HIDDENS_C 1
 
-#define OUTPUTS_R 2 // 10
+#define OUTPUTS_R 10 // 10
 #define OUTPUTS_C 1
 
 
@@ -58,10 +61,18 @@ void Get_Layers_Outputs(struct Neural_Network * NN)
 
 int main(void)
 {
+	struct DataSet data;
+	data.length = 4;
+	
+	Get_CSV_Data_Image("TMNIST_Data.csv", &data);
+
+
 	struct Neural_Network NN;
 	
-	NN.inputs[0] = 1;
-	NN.inputs[1] = 1;
+	for (int i = 0; i < 784; i++)
+	{
+		NN.inputs[i] = data.data_set[0].input[i];
+	}
 
 	New_Matrix(HIDDENS_R, INPUTS_R, (&NN)->w1);
 	New_Matrix(HIDDENS_R, HIDDENS_C, (&NN)->b1);
@@ -69,16 +80,16 @@ int main(void)
 	New_Matrix(OUTPUTS_R, OUTPUTS_C, (&NN)->b2);
 
 	
-	Print_Matrix("inputs", NN.inputs, INPUTS_R, INPUTS_C);
-	Print_Matrix("hiddens", NN.hiddens, HIDDENS_R, HIDDENS_C);
-	Print_Matrix("output", NN.outputs, OUTPUTS_R, OUTPUTS_C);
+	//Print_Matrix("inputs", NN.inputs, INPUTS_R, INPUTS_C);
+	//Print_Matrix("hiddens", NN.hiddens, HIDDENS_R, HIDDENS_C);
+	//Print_Matrix("output", NN.outputs, OUTPUTS_R, OUTPUTS_C);
 
 
 	Get_Layers_Outputs(&NN);
 	
 
 	Print_Matrix("inputs", NN.inputs, INPUTS_R, INPUTS_C);
-	Print_Matrix("hiddens", NN.hiddens, HIDDENS_R, HIDDENS_C);
+	//Print_Matrix("hiddens", NN.hiddens, HIDDENS_R, HIDDENS_C);
 	Print_Matrix("output", NN.outputs, OUTPUTS_R, OUTPUTS_C);
 
 
