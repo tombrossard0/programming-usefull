@@ -1,8 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "matrix.h"
 #include "data.h"
 #include "user_inputs_functions.h"
-
+#include "functions.h"
 
 /* Constants */
 #define INPUTS_R 784 // 784
@@ -21,10 +22,16 @@ struct Neural_Network
 
 	double w1[INPUTS_R * HIDDENS_R];
 	double b1[HIDDENS_R];
+	double weighted_hiddens[HIDDENS_R];
+	double cost_gradient_w1[INPUTS_R * HIDDENS_R];
+	double cost_gradient_b1[HIDDENS_R];
 	double hiddens[HIDDENS_R * HIDDENS_C];
 
 	double w2[OUTPUTS_R * HIDDENS_R];
 	double b2[OUTPUTS_R];
+	double weighted_outputs[OUTPUTS_R];
+	double cost_gradient_w2[OUTPUTS_R * HIDDENS_R];
+	double cost_gradient_b2[OUTPUTS_R];
 	double outputs[OUTPUTS_R * OUTPUTS_C];
 
 	/* for each weights and biases, calcul cost derivative */
@@ -43,7 +50,7 @@ double Node_Cost(double output, double desired_output) {
 }
 
 double Node_Cost_Derivative(double output, double desired_output) {
-	return 2 * (output - desired_output);
+	return 2 * (desired_output - output);
 }
 
 void Get_Layers_Outputs(struct Neural_Network * NN)
@@ -90,11 +97,125 @@ double Calculate_Total_Cost(struct Neural_Network NN, struct DataSet data_set)
 	return total_cost;
 }
 
+void Apply_All_Gradients_NN(struct Neural_Network * NN, double learning_rate)
+{
+	// Apply all gradients
+	for (int i = 0; i < 10; i++)
+	{
+		NN->b2[i] -= NN->cost_gradient_b2[i] * learning_rate;
+
+		for (int j = 0; j < 12; j++)
+		{
+			NN->w2[i * 12 + j] -= NN->cost_gradient_w2[i * 12 + j] * learning_rate;
+		}
+	}
+
+	for (int i = 0; i < 12; i++)
+	{
+		NN->b1[i] -= NN->cost_gradient_b1[i] * learning_rate;
+
+		for (int j = 0; j < 784; j++)
+		{
+			NN->w1[i* 784 + j] -= NN->cost_gradient_w1[i * 784 + j] * learning_rate;
+		}
+	}
+}
+
+void Clear_All_Gradients_NN(struct Neural_Network * NN)
+{
+	// Clear all gradients
+	for (int i = 0; i < HIDDENS_R * INPUTS_R; i++)
+		NN->cost_gradient_w1[i] = 0;
+	
+	for (int i = 0; i < HIDDENS_R; i++)
+		NN->cost_gradient_b1[i] = 0;
+
+	for (int i = 0; i < OUTPUTS_R * HIDDENS_R; i++)
+		NN->cost_gradient_w2[i] = 0;
+
+	for (int i = 0; i < OUTPUTS_R; i++)
+		NN->cost_gradient_b2[i] = 0;
+}
+
+void Update_All_Gradients_NN(struct Neural_Network * NN, struct Data data)
+{
+	Get_Layers_Outputs(NN);
+	
+	double * new_outputs_nodes_values = malloc(sizeof(double) * 10);
+	
+	for (int i = 0; i < 10; i++)
+	{
+		double cost_derivative = Node_Cost_Derivative(NN->outputs[i], data.expected_output[i]);
+		double activation_derivative = Sigmoid_Derivation(NN->weighted_outputs[i]);
+	
+		new_outputs_nodes_values[i] = cost_derivative * activation_derivative;
+	}
+
+	// Update_Gradients_Layer()
+	for (int i = 0; i < 10; i++)
+	{
+		for (int j = 0; j < 12; j++)
+		{
+			double partial_derivative_cost_weight = NN->hiddens[j] * new_outputs_nodes_values[i];
+			NN->cost_gradient_w2[i*12+j] += partial_derivative_cost_weight;
+		}
+
+		double partial_derivative_cost_bias = 1 * new_outputs_nodes_values[i];
+		NN->cost_gradient_b2[i] += partial_derivative_cost_bias;		
+	}
+
+	double * new_hiddens_nodes_values = malloc(sizeof(double) * 12);
+
+	for (int i = 0; i < 12; i++)
+	{
+		double new_node_value = 0;
+
+		for (int j = 0; j < 784; j++)
+		{
+			double weighted_input_derivative = NN->w1[j*12+i];
+			new_node_value += weighted_input_derivative * new_outputs_nodes_values[j];
+		}
+
+		new_node_value *= Sigmoid_Derivation(NN->weighted_hiddens[i]);
+		new_hiddens_nodes_values[i] = new_node_value;
+	}
+
+	// Update_Gradients_Layers()
+	for (int i = 0; i < 12; i++)
+	{
+		for (int j = 0; j < 784; j++)
+		{
+			double partial_derivative_cost_weight = NN->inputs[j] * new_hiddens_nodes_values[i];
+			NN->cost_gradient_w1[i*784+j] += partial_derivative_cost_weight;
+		}
+
+		double partial_derivative_cost_bias = 1 * new_hiddens_nodes_values[i];
+		NN->cost_gradient_b1[i] += partial_derivative_cost_bias;
+	}
+
+	free(new_outputs_nodes_values);
+	free(new_hiddens_nodes_values);
+}
+
+void Gradient_Descent(struct Neural_Network * NN, struct DataSet training_data, double learning_rate)
+{
+	for (int i = 0; i < training_data.length; i++)
+    {
+        Update_All_Gradients_NN(NN, training_data.data_set[i]);
+    }
+
+    Apply_All_Gradients_NN(NN, learning_rate);
+
+    Clear_All_Gradients_NN(NN);
+}
+
 
 int main(void)
 {
 	struct DataSet data;
-	data.length = 100;
+	data.length = 400;
+
+	data.data_set = malloc(sizeof(struct Data) * 500);
 	
 	Get_CSV_Data_Image("TMNIST_Data.csv", &data);
 
@@ -106,7 +227,27 @@ int main(void)
 	New_Matrix(OUTPUTS_R, HIDDENS_R, (&NN)->w2);
 	New_Matrix(OUTPUTS_R, OUTPUTS_C, (&NN)->b2);
 
+	
+	int epochs = 100;
+	for (int i = 0; i < epochs; i++)
+	{
+		Gradient_Descent(&NN, data, 0.1);
 
+		printf("\n%f\n\n", Calculate_Total_Cost(NN, data));
+
+		for (int i = 0; i < 784; i++)
+		{
+			NN.inputs[i] = data.data_set[0].input[i];
+		}
+
+		Get_Layers_Outputs(&NN);
+
+		printf("Label : %s\n", data.data_set[0].label);
+		Print_Matrix("Output", NN.outputs, OUTPUTS_R, OUTPUTS_C);
+
+	}
+
+	/*
 	for (int epoch = 0; epoch < 50; epoch++)
     {
         Reset_Matrix(INPUTS_R, HIDDENS_R, (&NN)->w1_derivative);
@@ -173,7 +314,10 @@ int main(void)
 		printf("Label : %s\n", data.data_set[0].label);
 		Print_Matrix("Output", NN.outputs, OUTPUTS_R, OUTPUTS_C);
 	}
+	*/	
+
 	
+	free(data.data_set);
 	
 	return 0;
 }

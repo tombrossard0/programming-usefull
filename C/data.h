@@ -12,5 +12,5 @@ struct Data {
 
 struct DataSet {
 	int length;
-	struct Data data_set[300];
+	struct Data * data_set;
 };
