@@ -11,8 +11,23 @@
 /* --------- */
 
 
+int Is_File_Exists(char * f_name)
+{
+	FILE * file;
+	
+	if ((file = fopen(f_name, "r")))
+	{
+		fclose(file);
+		return 1;
+	}
+
+	return 0;
+}
+
 void Get_CSV_Data_Image(char *file_name, struct DataSet * data_set)
 {
+	printf("\n-------- Getting Data... --------\n\n");
+
     FILE *fp;
     char row[MAXCHAR];
     char *token;
@@ -24,8 +39,8 @@ void Get_CSV_Data_Image(char *file_name, struct DataSet * data_set)
     {
         char label[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         char * fgets_return = fgets(row, MAXCHAR, fp);
-        //if (fgets_return[0] == 0)
-        //    printf("BUG\n");
+        if (fgets_return[0] == 0)
+            printf("BUG\n");
 
         token = strtok(row, ",");
 
@@ -61,6 +76,8 @@ void Get_CSV_Data_Image(char *file_name, struct DataSet * data_set)
             data_set->data_set[r-1].expected_output[label[0]-'0'] = 1;
 			printf("EXPECTED OUTPUT : %d\n", label[0]-'0');
 		}
-        r++;
+        r++;	
     }
+
+	printf("\n---------------------------------\n\n");
 }

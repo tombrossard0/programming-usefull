@@ -18,6 +18,7 @@
 #define XOR_DATA "XOR.csv"
 #define DIGITS_DATA "TMNIST_Data.csv"
 
+#define SAVE "save"
 
 struct Neural_Network
 {
@@ -43,6 +44,62 @@ struct Neural_Network
     double w2_derivative[OUTPUTS_R * HIDDENS_R];
     double b2_derivative[OUTPUTS_R];
 };
+
+/* Save Manager */
+
+void Export_NN(struct Neural_Network * NN, char file[])
+{
+	FILE *out = fopen(file, "w");
+
+	for (int i = 0; i < INPUTS_R * HIDDENS_R; i++)
+		fprintf(out, "%f\n", NN->w1[i]);
+
+	for (int i = 0; i < HIDDENS_R; i++)
+		fprintf(out, "%f\n", NN->b1[i]);
+
+	for (int i = 0; i < OUTPUTS_R * HIDDENS_R; i++)
+		fprintf(out, "%f\n", NN->w2[i]);
+
+	for (int i = 0; i < OUTPUTS_R; i++)
+		fprintf(out, "%f\n", NN->b2[i]);
+
+
+	fclose(out);
+}
+
+void Import_NN(struct Neural_Network * NN, char file[])
+{
+	FILE * in = fopen(file, "r");
+
+	char line[1000];
+	char *rest;
+
+	for (int i = 0; i < INPUTS_R * HIDDENS_R; i++)
+	{
+		fgets(line, 1000, in);
+		NN->w1[i] = strtod(line, &rest);
+	}
+
+	for (int i = 0; i < HIDDENS_R; i++)
+	{
+		fgets(line, 1000, in);
+		NN->b1[i] = strtod(line, &rest);
+	}
+
+	for (int i = 0; i < OUTPUTS_R * HIDDENS_R; i++)
+	{
+		fgets(line, 1000, in);
+		NN->w2[i] = strtod(line, &rest);
+	}
+
+	for (int i = 0; i < OUTPUTS_R; i++)
+	{
+		fgets(line, 1000, in);
+		NN->b2[i] = strtod(line, &rest);
+	}
+
+	fclose(in);
+}
 
 
 /* --------- FUNCTIONS --------- */
@@ -213,6 +270,73 @@ void Gradient_Descent(struct Neural_Network * NN, struct DataSet training_data, 
 }
 
 
+void Learning(struct Neural_Network * NN, struct DataSet data)
+{
+	for (int epoch = 0; epoch < 10000; epoch++)
+    {
+        Reset_Matrix(INPUTS_R, HIDDENS_R, NN->w1_derivative);
+        Reset_Matrix(HIDDENS_R, 1, NN->b1_derivative);     
+        Reset_Matrix(OUTPUTS_R, HIDDENS_R, NN->w2_derivative);
+        Reset_Matrix(OUTPUTS_R, 1, NN->b2_derivative);
+
+		double delta = 0.1;
+        double original_cost = Calculate_Total_Cost(*NN, data);
+
+        for (int j = 0; j < INPUTS_R * HIDDENS_R; j++)
+        {
+            NN->w1[j] += delta;
+            double cost = Calculate_Total_Cost(*NN, data) - original_cost;
+            NN->w1_derivative[j] += cost;
+            NN->w1[j] -= delta;
+        }
+
+        for (int j = 0; j < HIDDENS_R; j++)
+        {
+            NN->b1[j] += delta;
+            double cost = Calculate_Total_Cost(*NN, data) - original_cost;
+            NN->b1_derivative[j] += cost;
+            NN->b1[j] -= delta;
+        }
+
+        for (int j = 0; j < OUTPUTS_R * HIDDENS_R; j++)
+        {
+            NN->w2[j] += delta;
+            double cost = Calculate_Total_Cost(*NN, data) - original_cost;
+            NN->w2_derivative[j] += cost;
+            NN->w2[j] -= delta;
+        }
+
+        for (int j = 0; j < OUTPUTS_R; j++)
+        {
+            NN->b2[j] += delta;
+            double cost = Calculate_Total_Cost(*NN, data) - original_cost;
+            NN->b2_derivative[j] += cost;
+            NN->b2[j] -= delta;
+        }
+
+        for (int j = 0; j < INPUTS_R * HIDDENS_R; j++)
+           NN->w1[j] -= NN->w1_derivative[j];
+
+        for (int j = 0; j < HIDDENS_R; j++)
+            NN->b1[j] -= NN->b1_derivative[j];
+
+        for (int j = 0; j < OUTPUTS_R * HIDDENS_R; j++)
+            NN->w2[j] -= NN->w2_derivative[j];
+
+        for (int j = 0; j < OUTPUTS_R; j++)
+            NN->b2[j] -= NN->b2_derivative[j];
+     	
+		// Print current cost
+		if (epoch > 0)
+			printf("\b\b\b\b\b\b\b\b");
+		else
+			printf("\nCost : ");
+		printf("%8f", Calculate_Total_Cost(*NN, data));	
+	}
+	printf("\n\n");
+}
+
+
 int main(void)
 {
 	struct DataSet data;
@@ -230,7 +354,15 @@ int main(void)
 	New_Matrix(OUTPUTS_R, HIDDENS_R, (&NN)->w2);
 	//New_Matrix(OUTPUTS_R, OUTPUTS_C, (&NN)->b2);
 
-	/*		
+
+	int file_exists = Is_File_Exists(SAVE);
+	if (file_exists == 1)
+	{
+		Import_NN(&NN, SAVE);
+	}
+
+	/*
+	// Quicker method : (doesn't works actually)		
 	int epochs = 1000;
 	for (int i = 0; i < epochs; i++)
 	{
@@ -251,65 +383,14 @@ int main(void)
 	}
 	*/
 
-		
-	for (int epoch = 0; epoch < 10000; epoch++)
-    {
-        Reset_Matrix(INPUTS_R, HIDDENS_R, (&NN)->w1_derivative);
-        Reset_Matrix(HIDDENS_R, 1, (&NN)->b1_derivative);     
-        Reset_Matrix(OUTPUTS_R, HIDDENS_R, (&NN)->w2_derivative);
-        Reset_Matrix(OUTPUTS_R, 1, (&NN)->b2_derivative);
-
-		double delta = 0.1;
-        double original_cost = Calculate_Total_Cost(NN, data);
-
-        for (int j = 0; j < INPUTS_R * HIDDENS_R; j++)
-        {
-            (&NN)->w1[j] += delta;
-            double cost = Calculate_Total_Cost(NN, data) - original_cost;
-            (&NN)->w1_derivative[j] += cost;
-            (&NN)->w1[j] -= delta;
-        }
-
-        for (int j = 0; j < HIDDENS_R; j++)
-        {
-            (&NN)->b1[j] += delta;
-            double cost = Calculate_Total_Cost(NN, data) - original_cost;
-            (&NN)->b1_derivative[j] += cost;
-            (&NN)->b1[j] -= delta;
-        }
-
-        for (int j = 0; j < OUTPUTS_R * HIDDENS_R; j++)
-        {
-            (&NN)->w2[j] += delta;
-            double cost = Calculate_Total_Cost(NN, data) - original_cost;
-            (&NN)->w2_derivative[j] += cost;
-            (&NN)->w2[j] -= delta;
-        }
-
-        for (int j = 0; j < OUTPUTS_R; j++)
-        {
-            (&NN)->b2[j] += delta;
-            double cost = Calculate_Total_Cost(NN, data) - original_cost;
-            (&NN)->b2_derivative[j] += cost;
-            (&NN)->b2[j] -= delta;
-        }
-
-        for (int j = 0; j < INPUTS_R * HIDDENS_R; j++)
-           (&NN)->w1[j] -= (&NN)->w1_derivative[j];
-
-        for (int j = 0; j < HIDDENS_R; j++)
-            (&NN)->b1[j] -= (&NN)->b1_derivative[j];
-
-        for (int j = 0; j < OUTPUTS_R * HIDDENS_R; j++)
-            (&NN)->w2[j] -= (&NN)->w2_derivative[j];
-
-        for (int j = 0; j < OUTPUTS_R; j++)
-            (&NN)->b2[j] -= (&NN)->b2_derivative[j];
-     	
-		printf("\n%f\n\n", Calculate_Total_Cost(NN, data));	
+	// Train our Neural Network :
+	if (file_exists == 0)
+	{
+		Learning(&NN, data);
+		Export_NN(&NN, SAVE);
 	}
-	
 
+	// Print results
 	for (int j = 0; j < 4; j++)
 	{
 		for (int i = 0; i < INPUTS_R; i++)
