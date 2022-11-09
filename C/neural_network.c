@@ -6,13 +6,13 @@
 #include "functions.h"
 
 /* Constants */
-#define INPUTS_R 784 // 784
+#define INPUTS_R 2 // 784
 #define INPUTS_C 1
 
 #define HIDDENS_R 10 // 12
 #define HIDDENS_C 1
 
-#define OUTPUTS_R 10 // 10
+#define OUTPUTS_R 2 // 10
 #define OUTPUTS_C 1
 
 #define XOR_DATA "XOR.csv"
